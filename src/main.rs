@@ -2,6 +2,20 @@ use rand::Rng;
 use std::io;
 use colored::*;
 use easy_player::single_player::SinglePlayer;
+use clap::Parser;
+
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    /// Name of the person to greet
+    #[clap(short, long, default_value_t = 1)]
+    lives: usize,
+
+    /// Number of times to greet
+    #[clap(short, long, default_value_t = 5)]
+    guesses: usize,
+}
 
 struct GuessResult {
     guess_bytes: Vec<u8>,
@@ -15,20 +29,21 @@ struct PlayerUpdate {
     lives_reduced: usize
 }
 
-fn main() {    
+fn main() {
+    let args = Args::parse();
     let my_str = include_str!("data/words.txt");
     let string: Vec<Vec<&str>> = my_str.split('\n')
         .map(|x: &str| x.split(' ').collect())
         .collect();
 
-    let mut player = SinglePlayer{score: 0, lives: 1, credits: 1};
+    let mut player = SinglePlayer{score: 0, lives: args.lives, credits: 1};
     while player.lives > 0 {
         println!();        
         println!("{}", "#########################".yellow());
         println!("{}", "# Time to play a game!! #".yellow());
         println!("{}", "#########################".yellow());
         println!();
-        let update_values = word_guess(&string);
+        let update_values = word_guess(&string, args.guesses);
         player.add_lives(update_values.lives_added);
         player.reduce_lives(update_values.lives_reduced);
         player.add_score(update_values.score_added);
@@ -40,13 +55,13 @@ fn main() {
     
 }
 
-fn word_guess(string: &Vec<Vec<&str>>) -> PlayerUpdate {   
+fn word_guess(string: &Vec<Vec<&str>>, number_of_guesses: usize) -> PlayerUpdate {   
 
     let row_chosen = rand::thread_rng().gen_range(0..string.len());
     let word_chosen = rand::thread_rng().gen_range(0..string[row_chosen].len());
     // println!("Chosen word is: {}", string[row_chosen][word_chosen]);
     let word_bytes = string[row_chosen][word_chosen].to_owned().into_bytes();
-    let mut guesses = 5;
+    let mut guesses = number_of_guesses;
 
     loop {
         let guess_fmt = guesses.to_string().red();

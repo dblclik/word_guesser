@@ -9,3 +9,4 @@ edition = "2021"
 rand = "0.8.3"
 colored = "2.0.0"
 easy-player = {git = "https://github.com/dblclik/easy-player"}
+clap = { version = "3.1.18", features = ["derive"] }
