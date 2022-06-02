@@ -1,21 +1,50 @@
 use rand::Rng;
 use std::io;
 use colored::*;
+use easy_player::single_player::SinglePlayer;
 
 struct GuessResult {
     guess_bytes: Vec<u8>,
     result_vector: Vec<u8>
 }
 
-fn main() {
+struct PlayerUpdate {
+    score_added: usize,
+    score_reduced: usize,
+    lives_added: usize,
+    lives_reduced: usize
+}
+
+fn main() {    
     let my_str = include_str!("data/words.txt");
     let string: Vec<Vec<&str>> = my_str.split('\n')
         .map(|x: &str| x.split(' ').collect())
         .collect();
 
+    let mut player = SinglePlayer{score: 0, lives: 1, credits: 1};
+    while player.lives > 0 {
+        println!();        
+        println!("{}", "#########################".yellow());
+        println!("{}", "# Time to play a game!! #".yellow());
+        println!("{}", "#########################".yellow());
+        println!();
+        let update_values = word_guess(&string);
+        player.add_lives(update_values.lives_added);
+        player.reduce_lives(update_values.lives_reduced);
+        player.add_score(update_values.score_added);
+        player.reduce_score(update_values.score_reduced);
+    }
+
+    let ending_score = format!("You finished with {} points!!", player.score);
+    println!("{}", ending_score.green().bold());
+    
+}
+
+fn word_guess(string: &Vec<Vec<&str>>) -> PlayerUpdate {   
+
     let row_chosen = rand::thread_rng().gen_range(0..string.len());
     let word_chosen = rand::thread_rng().gen_range(0..string[row_chosen].len());
-    println!("Chosen word is: {}", string[row_chosen][word_chosen]);
+    // println!("Chosen word is: {}", string[row_chosen][word_chosen]);
     let word_bytes = string[row_chosen][word_chosen].to_owned().into_bytes();
     let mut guesses = 5;
 
@@ -38,24 +67,28 @@ fn main() {
         println!("You guessed: {}", lowercase_guess);
 
         let lowercase_guess_bytes = lowercase_guess.into_bytes();
-        println!("You guessed (in bytes): {:?}", lowercase_guess_bytes);
-        guesses -= 1;
+        // println!("You guessed (in bytes): {:?}", lowercase_guess_bytes);
+
         if lowercase_guess_bytes.len() != 6 {
             println!("Required guess length is 6, your input was length {}!", lowercase_guess_bytes.len());
             continue;
         }
+        guesses -= 1;
         let (win, result) = check_winning(&lowercase_guess_bytes, &word_bytes);
         format_guess_result(&result);
 
         if win {
-            println!("You win!");
-            break;
+            let win_message = format!("You win and earned {} points!", 20*(guesses+1));
+            println!("{}", win_message.cyan().bold());
+            return PlayerUpdate{score_added: 20*(guesses+1), score_reduced: 0, lives_added: 0, lives_reduced: 0}
         }
         else {
             if guesses <= 0 {
                 let response = "You Lost... :(".cyan().bold();
                 println!("{}", response);
-                break;
+                let correct_word_message = format!("The correct word was {}", string[row_chosen][word_chosen]);
+                println!("{}", correct_word_message.cyan().bold());
+                return PlayerUpdate{score_added: 0, score_reduced: 0, lives_added: 0, lives_reduced: 1}
             }
         }
     }

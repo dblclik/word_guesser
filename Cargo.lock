@@ -31,6 +31,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "easy-player"
+version = "0.1.0"
+source = "git+https://github.com/dblclik/easy-player#9a87723c573fa2307be94b60fe3f433081c36421"
+
+[[package]]
 name = "getrandom"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -131,5 +136,6 @@ name = "word_guess"
 version = "0.1.0"
 dependencies = [
  "colored",
+ "easy-player",
  "rand",
 ]
